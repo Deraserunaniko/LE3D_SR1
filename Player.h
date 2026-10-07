@@ -1,0 +1,167 @@
+#pragma once
+#include "KamataEngine.h"
+#include "MyMath.h"
+#include"Enemy.h"
+
+class MapChipField;
+class Enemy;
+class Player {
+
+public:
+	void Initialize(KamataEngine::Model* model, KamataEngine::Camera* camera, const KamataEngine::Vector3& position);
+
+	void Update();
+
+	void Draw();
+
+	void SetMapChipField(MapChipField* mapChipField) { mapChipField_ = mapChipField; }
+
+	AABB GetAABB();
+
+	void OnCollision(const Enemy* enemy);
+
+	 KamataEngine::Vector3 GetWorldPosition();
+
+
+	const KamataEngine::WorldTransform& GetWorldTransform() const { return worldTransform_; }
+	const KamataEngine::Vector3& GetVelocity() const { return velocity_; }
+
+	bool IsDead() const { return isDead_; }
+
+	// ワイヤ状態の取得
+	bool HasWire() const { return hasWire_; }
+	const KamataEngine::Vector3& GetWireAnchor() const { return wireAnchor_; }
+
+
+private:
+	KamataEngine::WorldTransform worldTransform_;
+
+	KamataEngine::Model* model_ = nullptr;
+
+	KamataEngine::Camera* camera_ = nullptr;
+
+	MapChipField* mapChipField_ = nullptr;
+
+	KamataEngine::Vector3 velocity_ = {};
+
+	
+	
+	//プレイヤーの加速度
+	static inline const float kAcceleration = 0.3f;
+
+	//プレイヤーが入力を離したときの減速量
+	static inline const float kAttenuation = 0.1f;
+
+	// プレイヤーの最大走行速度
+	static inline const float kLimitRunSpeed = 0.15f;
+
+	// ワイヤー接続中に毎フレーム加える横方向の加速度。
+	static inline const float kWireAttachAcceleration = 0.02f;
+
+	// 短いワイヤーによる加速倍率の上限。
+	static inline const float kMaxWireAccelerationMultiplier = 1.0f;
+
+	// ワイヤーで振れている間だけ使用する最大横速度。
+	static inline const float kLimitWireSpeed = 0.25f;
+
+	// 左右反転にかかる時間
+	static inline const float kTimeTurn = 0.3f;
+
+	// 重力による加速度
+	static inline const float kGravityAcceleration = 0.03f;
+
+	// 落下速度の最大値
+	static inline const float kLimitFallSpeed = 0.5;
+
+	// ジャンプ時に加える上方向の速度
+	static inline const float kJumpAcceleration = 0.4f;
+
+	static inline const float kWidth = 0.8f;
+
+	static inline const float kHeight = 0.8f;
+
+		// この高さより下に落ちたら死亡する。
+	static inline const float kDeathY = -1.0f;
+
+	bool onGround_ = true;
+
+	// ワイヤーの接続状態
+	bool hasWire_ = false;
+	KamataEngine::Vector3 wireAnchor_ = {};
+	float wireLength_ = 0.0f;
+	float wireAttachDirectionX_ = 0.0f;
+	// ワイヤーの長さから計算した加速倍率。短いほど大きくなる。
+	float wireAccelerationMultiplier_ = 1.0f;
+
+
+
+	enum class LRDirection {
+		kRight,
+		kLeft,
+	};
+
+	LRDirection lrDirection_ = LRDirection::kRight;
+
+	float turnFirstRotationY_ = 0.0f;
+	float turnTimer_ = 0.0f;
+
+	struct CollisionMapInfo {
+		bool ceiling = false;
+		bool landing = false;
+		bool hitWall = false;
+		KamataEngine::Vector3 move;
+	};
+
+	bool isDead_ = false;
+
+	void InputMove();
+
+	
+	// ワイヤーの更新
+	void UpdateWire();
+	bool TryAttachWire();
+
+
+	void CheckMapCollision(CollisionMapInfo& info);
+
+	void CheckMapCollisionUp(CollisionMapInfo& info);
+
+	void CheckMapCollisionDown(CollisionMapInfo& info);
+
+	void CheckMapCollisionRight(CollisionMapInfo& info);
+
+	void CheckMapCollisionLeft(CollisionMapInfo& info);
+
+
+
+	void CheckMapMove(const CollisionMapInfo& info);
+
+	void CheckMapCeiling(const CollisionMapInfo& info);
+
+	void CheckMapWall(const CollisionMapInfo& info);
+
+
+	void CheckMapLanding(const CollisionMapInfo& info);
+
+
+	void AnimateTurn();
+
+	enum Corner {
+		kRightBottom,
+		kLeftBottom,
+		kRightTop,
+		kLeftTop,
+
+		kNumCorner
+	};
+
+	KamataEngine::Vector3 CornerPosition(const KamataEngine::Vector3& center, Corner corner);
+
+	static inline const float kBlank = 0.1f;
+
+	static inline const float kAttenuationLanding = 0.5f;
+
+	static inline const float kGroundSearchHeight = 0.1f;
+
+	static inline const float kAttenuationWall = 0.5f;
+};
